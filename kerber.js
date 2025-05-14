@@ -11,7 +11,7 @@ camera.position.set(0.5, 1.5, 2.5);
 
 let renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
 document.body.appendChild(renderer.domElement);
 
 let controls = new OrbitControls(camera, renderer.domElement);
@@ -23,7 +23,7 @@ let actions = {};
 let ledOn = false;
 
 new RGBELoader()
-  .setDataType(THREE.UnsignedByteType)
+  .setDataType(THREE.HalfFloatType)
   .load('https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/equirectangular/venice_sunset_1k.hdr', (texture) => {
     texture.mapping = THREE.EquirectangularReflectionMapping;
     scene.environment = texture;
