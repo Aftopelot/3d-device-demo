@@ -24,7 +24,7 @@ let ledOn = false;
 
 new RGBELoader()
   .setDataType(THREE.HalfFloatType)
-  .load('https://rawcdn.githack.com/KhronosGroup/glTF-Sample-Viewer/HEAD/assets/environment/studio_small_09_1k.hdr', (texture) => {
+  .load('https://github.com/KhronosGroup/glTF-Sample-Environments/blob/main/neutral.hdr', (texture) => {
     texture.mapping = THREE.EquirectangularReflectionMapping;
     scene.environment = texture;
     scene.background = new THREE.Color(0x222222);
