@@ -118,12 +118,11 @@ function loadModel() {
           }
         } else {
           const action = actions[btnName];
-          const target = gltf.scene.getObjectByName(btnName);
-          if (action && target) {
-            const localAction = mixer.clipAction(action.getClip(), target);
-            localAction.setLoop(THREE.LoopOnce);
-            localAction.clampWhenFinished = true;
-            localAction.reset().play();
+          if (action) {
+            action.reset();
+            action.setLoop(THREE.LoopOnce);
+            action.clampWhenFinished = true;
+            action.play();
           }
         }
       }
