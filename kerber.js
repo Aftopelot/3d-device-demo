@@ -6,9 +6,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
 
 let scene = new THREE.Scene();
-let camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-camera.position.set(0.5, 1.5, 2.5);
-
+let camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.01, 10);
 let renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -24,11 +22,10 @@ let ledOn = false;
 
 new RGBELoader()
   .setDataType(THREE.HalfFloatType)
-  .load('https://rawcdn.githack.com/mrdoob/three.js/dev/examples/textures/equirectangular/venice_sunset_1k.hdr', (texture) => {
+  .load('assets/neutral.hdr', (texture) => {
     texture.mapping = THREE.EquirectangularReflectionMapping;
     scene.environment = texture;
     scene.background = new THREE.Color(0x222222);
-
     loadModel();
   });
 
@@ -38,9 +35,20 @@ function loadModel() {
     scene.add(gltf.scene);
     mixer = new THREE.AnimationMixer(gltf.scene);
 
+    const camInit = gltf.scene.getObjectByName('cam_init');
+    if (camInit && camInit.isCamera) {
+      camera.position.copy(camInit.position);
+      camera.rotation.copy(camInit.rotation);
+    }
+
     const btnPowerMesh = gltf.scene.getObjectByName('btn_power');
     const btnPowerTrack = gltf.animations.find(clip => clip.name === 'ShapeKeyAction');
-    if (btnPowerTrack) actions['btn_power_shapekeys'] = mixer.clipAction(btnPowerTrack, btnPowerMesh);
+    if (btnPowerTrack) {
+      const action = mixer.clipAction(btnPowerTrack, btnPowerMesh);
+      action.setLoop(THREE.LoopOnce);
+      action.clampWhenFinished = true;
+      actions['btn_power_shapekeys'] = action;
+    }
 
     gltf.scene.traverse((child) => {
       if (child.isMesh && child.name.startsWith('led_')) {
@@ -53,7 +61,10 @@ function loadModel() {
 
     gltf.animations.forEach((clip) => {
       if (!actions[clip.name]) {
-        actions[clip.name] = mixer.clipAction(clip);
+        const action = mixer.clipAction(clip);
+        action.setLoop(THREE.LoopOnce);
+        action.clampWhenFinished = true;
+        actions[clip.name] = action;
       }
     });
 
