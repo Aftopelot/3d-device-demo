@@ -10,6 +10,7 @@ let camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHei
 let renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMappingExposure = 1.75;
 document.body.appendChild(renderer.domElement);
 
 let controls = new OrbitControls(camera, renderer.domElement);
@@ -19,6 +20,7 @@ let clock = new THREE.Clock();
 let mixer;
 let actions = {};
 let ledOn = false;
+let screenOn = false;
 
 new RGBELoader()
   .setDataType(THREE.HalfFloatType)
@@ -42,13 +44,7 @@ function loadModel() {
     }
 
     const btnPowerMesh = gltf.scene.getObjectByName('btn_power');
-    const btnPowerTrack = gltf.animations.find(clip => clip.name === 'ShapeKeyAction');
-    if (btnPowerTrack) {
-      const action = mixer.clipAction(btnPowerTrack, btnPowerMesh);
-      action.setLoop(THREE.LoopOnce);
-      action.clampWhenFinished = true;
-      actions['btn_power_shapekeys'] = action;
-    }
+    const btnPowerInfluenceIndex = btnPowerMesh?.morphTargetDictionary?.On;
 
     gltf.scene.traverse((child) => {
       if (child.isMesh && child.name.startsWith('led_')) {
@@ -60,12 +56,10 @@ function loadModel() {
     });
 
     gltf.animations.forEach((clip) => {
-      if (!actions[clip.name]) {
-        const action = mixer.clipAction(clip);
-        action.setLoop(THREE.LoopOnce);
-        action.clampWhenFinished = true;
-        actions[clip.name] = action;
-      }
+      const action = mixer.clipAction(clip);
+      action.setLoop(THREE.LoopOnce);
+      action.clampWhenFinished = true;
+      actions[clip.name] = action;
     });
 
     const raycaster = new THREE.Raycaster();
@@ -86,7 +80,9 @@ function loadModel() {
         const btnName = clicked.name;
 
         if (btnName === 'btn_power') {
-          actions['btn_power_shapekeys']?.reset().play();
+          if (btnPowerMesh && typeof btnPowerInfluenceIndex === 'number') {
+            btnPowerMesh.morphTargetInfluences[btnPowerInfluenceIndex] = ledOn ? 0 : 1;
+          }
           const led = gltf.scene.getObjectByName('led_BatteryOperation');
           if (led && led.material) {
             led.material.emissiveIntensity = ledOn ? 0 : 5;
@@ -94,8 +90,16 @@ function loadModel() {
           }
         } else if (btnName === 'btn_search_with_stop') {
           actions['button_press']?.reset().play();
+
+          const screen = gltf.scene.getObjectByName('ScreenDisplay');
+          if (screen?.material && screen.material.name === 'screen_placeholder') {
+            screen.material = screen.material.clone();
+            screen.material.emissiveIntensity = screenOn ? 0 : 1;
+            screenOn = !screenOn;
+          }
         } else {
-          actions['press_btn_action']?.reset().play();
+          const action = mixer.clipAction(actions['press_btn_action']?._clip, clicked);
+          action?.reset().play();
         }
       }
     });
