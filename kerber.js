@@ -10,7 +10,7 @@ let camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHei
 let renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMappingExposure = 1.75;
+renderer.toneMappingExposure = 2.5;
 document.body.appendChild(renderer.domElement);
 
 let controls = new OrbitControls(camera, renderer.domElement);
@@ -55,6 +55,9 @@ function loadModel() {
       }
     });
 
+    const sharedAction = gltf.animations.find(a => a.name === 'press_btn_action');
+    const sharedClip = sharedAction ? sharedAction : null;
+
     gltf.animations.forEach((clip) => {
       const action = mixer.clipAction(clip);
       action.setLoop(THREE.LoopOnce);
@@ -98,8 +101,12 @@ function loadModel() {
             screenOn = !screenOn;
           }
         } else {
-          const action = mixer.clipAction(actions['press_btn_action']?._clip, clicked);
-          action?.reset().play();
+          if (sharedClip) {
+            const clipAction = mixer.clipAction(sharedClip, clicked);
+            clipAction.setLoop(THREE.LoopOnce);
+            clipAction.clampWhenFinished = true;
+            clipAction.reset().play();
+          }
         }
       }
     });
