@@ -22,6 +22,7 @@ let actions = {};
 let ledOn = false;
 let screenOn = false;
 let screenMaterial = null;
+let originalEmissiveMap = null;
 
 new RGBELoader()
   .setDataType(THREE.HalfFloatType)
@@ -55,8 +56,9 @@ function loadModel() {
         }
         if (child.name === 'ScreenDisplay' && child.material && child.material.name === 'screen_placeholder') {
           screenMaterial = child.material.clone();
+          originalEmissiveMap = screenMaterial.emissiveMap;
+          screenMaterial.emissiveMap = null;
           child.material = screenMaterial;
-          screenMaterial.emissiveIntensity = 0;
         }
       }
     });
@@ -98,8 +100,9 @@ function loadModel() {
           actions['button_press']?.reset().play();
 
           if (screenMaterial) {
-            screenMaterial.emissiveIntensity = screenOn ? 0 : 1;
+            screenMaterial.emissiveMap = screenOn ? null : originalEmissiveMap;
             screenOn = !screenOn;
+            screenMaterial.needsUpdate = true;
           }
         } else {
           actions[btnName]?.reset().play();
