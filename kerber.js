@@ -21,6 +21,7 @@ let mixer;
 let actions = {};
 let ledOn = false;
 let screenOn = false;
+let screenMaterial = null;
 
 new RGBELoader()
   .setDataType(THREE.HalfFloatType)
@@ -47,16 +48,18 @@ function loadModel() {
     const btnPowerInfluenceIndex = btnPowerMesh?.morphTargetDictionary?.On;
 
     gltf.scene.traverse((child) => {
-      if (child.isMesh && child.name.startsWith('led_')) {
-        if (child.material && child.material.emissive) {
+      if (child.isMesh) {
+        if (child.name.startsWith('led_') && child.material && child.material.emissive) {
           child.material = child.material.clone();
           child.material.emissiveIntensity = 0;
         }
+        if (child.name === 'ScreenDisplay' && child.material && child.material.name === 'screen_placeholder') {
+          screenMaterial = child.material.clone();
+          child.material = screenMaterial;
+          screenMaterial.emissiveIntensity = 0;
+        }
       }
     });
-
-    const sharedAction = gltf.animations.find(a => a.name === 'press_btn_action');
-    const sharedClip = sharedAction ? sharedAction : null;
 
     gltf.animations.forEach((clip) => {
       const action = mixer.clipAction(clip);
@@ -94,19 +97,12 @@ function loadModel() {
         } else if (btnName === 'btn_search_with_stop') {
           actions['button_press']?.reset().play();
 
-          const screen = gltf.scene.getObjectByName('ScreenDisplay');
-          if (screen?.material && screen.material.name === 'screen_placeholder') {
-            screen.material = screen.material.clone();
-            screen.material.emissiveIntensity = screenOn ? 0 : 1;
+          if (screenMaterial) {
+            screenMaterial.emissiveIntensity = screenOn ? 0 : 1;
             screenOn = !screenOn;
           }
         } else {
-          if (sharedClip) {
-            const clipAction = mixer.clipAction(sharedClip, clicked);
-            clipAction.setLoop(THREE.LoopOnce);
-            clipAction.clampWhenFinished = true;
-            clipAction.reset().play();
-          }
+          actions[btnName]?.reset().play();
         }
       }
     });
