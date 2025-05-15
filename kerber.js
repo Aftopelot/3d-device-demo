@@ -59,6 +59,7 @@ function loadModel() {
           screenMaterial = child.material.clone();
           originalEmissiveMap = screenMaterial.emissiveMap;
           screenMaterial.emissiveMap = null;
+          screenMaterial.needsUpdate = true;
           child.material = screenMaterial;
         }
       }
@@ -105,8 +106,8 @@ function loadModel() {
 
           if (screenMaterial) {
             screenMaterial.emissiveMap = screenOn ? null : originalEmissiveMap;
-            screenOn = !screenOn;
             screenMaterial.needsUpdate = true;
+            screenOn = !screenOn;
           }
         } else if (btnName === 'btn_decrease') {
           if (sharedClip && clicked) {
@@ -115,7 +116,6 @@ function loadModel() {
             action.clampWhenFinished = true;
             action.reset().play();
           }
-        }
         } else {
           actions[btnName]?.reset().play();
         }
