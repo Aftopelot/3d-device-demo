@@ -109,7 +109,13 @@ function loadModel() {
             screenMaterial.needsUpdate = true;
           }
         } else if (btnName === 'btn_decrease') {
-          actions['press_btn_action']?.reset().play();
+          if (sharedClip && clicked) {
+            const action = mixer.clipAction(sharedClip, clicked);
+            action.setLoop(THREE.LoopOnce);
+            action.clampWhenFinished = true;
+            action.reset().play();
+          }
+        }
         } else {
           actions[btnName]?.reset().play();
         }
