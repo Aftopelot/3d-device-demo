@@ -24,7 +24,7 @@ let ledOn = false;
 
 new RGBELoader()
   .setDataType(THREE.HalfFloatType)
-  .load('https://github.com/KhronosGroup/glTF-Sample-Environments/blob/main/neutral.hdr', (texture) => {
+  .load('https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Viewer@master/assets/environment/studio_small_09_1k.hdr', (texture) => {
     texture.mapping = THREE.EquirectangularReflectionMapping;
     scene.environment = texture;
     scene.background = new THREE.Color(0x222222);
@@ -38,6 +38,10 @@ function loadModel() {
     scene.add(gltf.scene);
     mixer = new THREE.AnimationMixer(gltf.scene);
 
+    const btnPowerMesh = gltf.scene.getObjectByName('btn_power');
+    const btnPowerTrack = gltf.animations.find(clip => clip.name === 'ShapeKeyAction');
+    if (btnPowerTrack) actions['btn_power_shapekeys'] = mixer.clipAction(btnPowerTrack, btnPowerMesh);
+
     gltf.scene.traverse((child) => {
       if (child.isMesh && child.name.startsWith('led_')) {
         if (child.material && child.material.emissive) {
@@ -48,8 +52,9 @@ function loadModel() {
     });
 
     gltf.animations.forEach((clip) => {
-      const action = mixer.clipAction(clip);
-      actions[clip.name] = action;
+      if (!actions[clip.name]) {
+        actions[clip.name] = mixer.clipAction(clip);
+      }
     });
 
     const raycaster = new THREE.Raycaster();
@@ -69,9 +74,8 @@ function loadModel() {
 
         const btnName = clicked.name;
 
-        // логика кнопок без привязки clip.name === object.name
         if (btnName === 'btn_power') {
-          actions['btn_power_On']?.play();
+          actions['btn_power_shapekeys']?.reset().play();
           const led = gltf.scene.getObjectByName('led_BatteryOperation');
           if (led && led.material) {
             led.material.emissiveIntensity = ledOn ? 0 : 5;
