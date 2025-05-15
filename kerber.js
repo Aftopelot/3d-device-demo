@@ -24,10 +24,10 @@ let ledOn = false;
 
 new RGBELoader()
   .setDataType(THREE.HalfFloatType)
-  .load('https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/equirectangular/venice_sunset_1k.hdr', (texture) => {
+  .load('https://rawcdn.githack.com/KhronosGroup/glTF-Sample-Viewer/HEAD/assets/environment/studio_small_09_1k.hdr', (texture) => {
     texture.mapping = THREE.EquirectangularReflectionMapping;
     scene.environment = texture;
-    scene.background = texture;
+    scene.background = new THREE.Color(0x222222);
 
     loadModel();
   });
@@ -48,11 +48,8 @@ function loadModel() {
     });
 
     gltf.animations.forEach((clip) => {
-      const root = gltf.scene.getObjectByName(clip.name);
-      if (root) {
-        const action = mixer.clipAction(clip, root);
-        actions[clip.name] = action;
-      }
+      const action = mixer.clipAction(clip);
+      actions[clip.name] = action;
     });
 
     const raycaster = new THREE.Raycaster();
@@ -66,25 +63,24 @@ function loadModel() {
       const intersects = raycaster.intersectObjects(gltf.scene.children, true);
 
       if (intersects.length > 0) {
-        const clicked = intersects[0].object;
+        let clicked = intersects[0].object;
+        while (clicked && !clicked.name.startsWith('btn_')) clicked = clicked.parent;
+        if (!clicked) return;
+
         const btnName = clicked.name;
 
-        if (btnName.startsWith('btn_')) {
-          const action = actions[btnName];
-          if (action) {
-            action.reset();
-            action.setLoop(THREE.LoopOnce);
-            action.clampWhenFinished = true;
-            action.play();
-
-            if (btnName === 'btn_power') {
-              const led = gltf.scene.getObjectByName('led_BatteryOperation');
-              if (led && led.material) {
-                led.material.emissiveIntensity = ledOn ? 0 : 5;
-                ledOn = !ledOn;
-              }
-            }
+        // логика кнопок без привязки clip.name === object.name
+        if (btnName === 'btn_power') {
+          actions['btn_power_On']?.play();
+          const led = gltf.scene.getObjectByName('led_BatteryOperation');
+          if (led && led.material) {
+            led.material.emissiveIntensity = ledOn ? 0 : 5;
+            ledOn = !ledOn;
           }
+        } else if (btnName === 'btn_search_with_stop') {
+          actions['button_press']?.reset().play();
+        } else {
+          actions['press_btn_action']?.reset().play();
         }
       }
     });
