@@ -23,6 +23,7 @@ let ledOn = false;
 let screenOn = false;
 let screenMaterial = null;
 let originalEmissiveMap = null;
+let sharedClip = null;
 
 new RGBELoader()
   .setDataType(THREE.HalfFloatType)
@@ -68,6 +69,9 @@ function loadModel() {
       action.setLoop(THREE.LoopOnce);
       action.clampWhenFinished = true;
       actions[clip.name] = action;
+      if (clip.name === 'press_btn_action') {
+        sharedClip = clip;
+      }
     });
 
     const raycaster = new THREE.Raycaster();
@@ -104,6 +108,8 @@ function loadModel() {
             screenOn = !screenOn;
             screenMaterial.needsUpdate = true;
           }
+        } else if (btnName === 'btn_decrease') {
+          actions['press_btn_action']?.reset().play();
         } else {
           actions[btnName]?.reset().play();
         }
