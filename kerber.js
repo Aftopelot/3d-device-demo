@@ -117,7 +117,13 @@ function loadModel() {
             action.reset().play();
           }
         } else {
-          actions[btnName]?.reset().play();
+          const action = actions[btnName];
+          if (action) {
+            action.reset();
+            action.setLoop(THREE.LoopOnce);
+            action.clampWhenFinished = true;
+            action.play();
+          }
         }
       }
     });
