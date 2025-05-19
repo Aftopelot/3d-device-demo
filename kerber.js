@@ -30,7 +30,7 @@ new RGBELoader()
   .load('assets/neutral.hdr', (texture) => {
     texture.mapping = THREE.EquirectangularReflectionMapping;
     scene.environment = texture;
-    scene.background = new THREE.Color(0E403F);
+    scene.background = new THREE.Color(0x0E403F);
     loadModel();
   });
 
